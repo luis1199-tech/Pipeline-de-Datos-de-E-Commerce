@@ -12,7 +12,7 @@ def temp() -> DataFrame:
     return read_csv("data/temperature.csv")
 
 
-def get_public_holidays(public_holidays_url: str, year: str, countryCode: str = "BR") -> DataFrame:
+def get_public_holidays(public_holidays_url: str, year: str) -> DataFrame:
     """
     Obtiene los días festivos públicos desde la API.
 
@@ -24,23 +24,23 @@ def get_public_holidays(public_holidays_url: str, year: str, countryCode: str = 
     Returns:
         DataFrame: Un DataFrame con los días festivos públicos.
     """
-    url = f"{public_holidays_url}/api/v3/PublicHolidays/{year}/{countryCode}"
+    url = f"{public_holidays_url}/{year}/BR"
     
     try:
         response = requests.get(url)
         response.raise_for_status()  # Lanza error si la solicitud falla
         
-        # Convertir el JSON a DataFrame
-        df = read_json(response.text)
+        data = response.json()
+        df = DataFrame(data)
         
         # Eliminar columnas innecesarias
-        df.drop(columns=["types", "counties"], inplace=True, errors="ignore")
+        df.drop(columns=["types", "counties"], errors="ignore", inplace=True)
         
         # Convertir la columna 'date' a datetime
         df["date"] = to_datetime(df["date"])
         
         return df
-
+    
     except requests.RequestException as e:
         print(f"Error al obtener los días festivos: {e}")
         raise SystemExit(e)
@@ -64,8 +64,8 @@ def extract(
         for csv_file, table_name in csv_table_mapping.items()
     }
 
-    # Se obtienen los días festivos para el año 2017
-    holidays = get_public_holidays(public_holidays_url, "2017")
+    # Se obtienen los días festivos para el año 2018
+    holidays = get_public_holidays(public_holidays_url, "2018")
 
     dataframes["public_holidays"] = holidays
 
